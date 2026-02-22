@@ -1,0 +1,533 @@
+{
+  "name": "Excel to Instagram + Facebook Auto Publisher",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/files/social_posts.xlsx"
+      },
+      "id": "2",
+      "name": "Read Excel File",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "binaryPropertyName": "data",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "3",
+      "name": "Excel to JSON",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "4",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "model": "gpt-4o-mini",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a social media copywriter. Create one short high-performing post with emojis, one CTA, and up to 8 hashtags. Keep under 2200 chars for Instagram."
+            },
+            {
+              "role": "user",
+              "content": "=Create social caption for this campaign. Product: {{$json[\"product\"]}}. Audience: {{$json[\"audience\"]}}. Goal: {{$json[\"goal\"]}}. Offer: {{$json[\"offer\"]}}. Tone: {{$json[\"tone\"]}}. Keywords: {{$json[\"keywords\"]}}"
+            }
+          ]
+        },
+        "simplify": true
+      },
+      "id": "5",
+      "name": "Generate Caption (OpenAI)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            {
+              "name": "caption",
+              "value": "={{ $json.message?.content || $json.text || 'Fallback caption' }}"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $('Split In Batches').item.json.image_url }}"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ $('Split In Batches').item.json.video_url }}"
+            },
+            {
+              "name": "publish_to",
+              "value": "={{ $('Split In Batches').item.json.publish_to || 'both' }}"
+            },
+            {
+              "name": "facebook_page_id",
+              "value": "={{ $('Split In Batches').item.json.facebook_page_id }}"
+            },
+            {
+              "name": "instagram_business_id",
+              "value": "={{ $('Split In Batches').item.json.instagram_business_id }}"
+            },
+            {
+              "name": "facebook_access_token",
+              "value": "={{ $('Split In Batches').item.json.facebook_access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "Prepare Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        1310,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.publish_to}}",
+              "operation": "contains",
+              "value2": "facebook"
+            },
+            {
+              "value1": "={{$json.publish_to}}",
+              "operation": "equal",
+              "value2": "both"
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "7",
+      "name": "Post to Facebook?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1530,
+        210
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{$json.facebook_page_id}}/photos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{$json.image_url}}"
+            },
+            {
+              "name": "caption",
+              "value": "={{$json.caption}}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{$json.facebook_access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8",
+      "name": "Publish Image to Facebook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1770,
+        130
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{$json.facebook_page_id}}/videos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_url",
+              "value": "={{$json.video_url}}"
+            },
+            {
+              "name": "description",
+              "value": "={{$json.caption}}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{$json.facebook_access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9",
+      "name": "Publish Video to Facebook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1770,
+        290
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.publish_to}}",
+              "operation": "contains",
+              "value2": "instagram"
+            },
+            {
+              "value1": "={{$json.publish_to}}",
+              "operation": "equal",
+              "value2": "both"
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "10",
+      "name": "Post to Instagram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1530,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{$json.instagram_business_id}}/media",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "image_url",
+              "value": "={{$json.image_url}}"
+            },
+            {
+              "name": "caption",
+              "value": "={{$json.caption}}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{$json.facebook_access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "11",
+      "name": "Create IG Media (Image)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1760,
+        390
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{$json.instagram_business_id}}/media",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "REELS"
+            },
+            {
+              "name": "video_url",
+              "value": "={{$json.video_url}}"
+            },
+            {
+              "name": "caption",
+              "value": "={{$json.caption}}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{$json.facebook_access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "12",
+      "name": "Create IG Media (Video)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1760,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{$json.instagram_business_id}}/media_publish",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{$json.id}}"
+            },
+            {
+              "name": "access_token",
+              "value": "={{$('Prepare Payload').item.json.facebook_access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "13",
+      "name": "Publish to Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1990,
+        450
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Excel File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Excel File": {
+      "main": [
+        [
+          {
+            "node": "Excel to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Excel to JSON": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Generate Caption (OpenAI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Caption (OpenAI)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Payload": {
+      "main": [
+        [
+          {
+            "node": "Post to Facebook?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post to Instagram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Facebook?": {
+      "main": [
+        [
+          {
+            "node": "Publish Image to Facebook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Publish Video to Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to Instagram?": {
+      "main": [
+        [
+          {
+            "node": "Create IG Media (Image)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create IG Media (Video)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create IG Media (Image)": {
+      "main": [
+        [
+          {
+            "node": "Publish to Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create IG Media (Video)": {
+      "main": [
+        [
+          {
+            "node": "Publish to Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish to Instagram": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Image to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Video to Facebook": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "replace-with-your-instance-id"
+  },
+  "id": "excel-social-publisher"
+}
