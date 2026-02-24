@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <rect width="1200" height="1200" rx="150" fill="#FFF8E7"/>
+
+  <circle cx="600" cy="520" r="360" fill="none" stroke="#B91C1C" stroke-width="28"/>
+  <circle cx="600" cy="520" r="320" fill="none" stroke="#F97316" stroke-width="8" stroke-dasharray="14 18"/>
+
+  <path d="M360 540 C470 390, 730 390, 840 540" fill="none" stroke="#7C2D12" stroke-width="24" stroke-linecap="round"/>
+  <path d="M390 580 C500 460, 700 460, 810 580" fill="none" stroke="#C2410C" stroke-width="14" stroke-linecap="round"/>
+
+  <g fill="#7C2D12">
+    <circle cx="460" cy="540" r="12"/>
+    <circle cx="520" cy="500" r="10"/>
+    <circle cx="590" cy="520" r="11"/>
+    <circle cx="660" cy="500" r="10"/>
+    <circle cx="730" cy="542" r="12"/>
+  </g>
+
+  <text x="600" y="830" text-anchor="middle" font-family="'Baloo 2', 'Poppins', sans-serif" font-size="108" font-weight="800" fill="#991B1B">Oye Chakhna!</text>
+  <text x="600" y="900" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="40" letter-spacing="8" fill="#9A3412">INDIAN BAR BITES</text>
+</svg>
