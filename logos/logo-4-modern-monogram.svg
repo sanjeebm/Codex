@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
+  <defs>
+    <linearGradient id="purple" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#6D28D9"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="1200" rx="130" fill="url(#purple)"/>
+
+  <circle cx="600" cy="460" r="250" fill="none" stroke="#C4B5FD" stroke-width="18" opacity="0.5"/>
+
+  <path d="M450 600 V380 C450 320 495 270 565 270 C635 270 680 315 680 375 C680 445 625 480 560 480 H480" fill="none" stroke="url(#accent)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M700 320 C760 350 790 410 790 470 C790 560 725 630 635 630 C550 630 490 575 470 500" fill="none" stroke="#FDE68A" stroke-width="24" stroke-linecap="round"/>
+
+  <circle cx="720" cy="310" r="16" fill="#FDE68A"/>
+  <circle cx="770" cy="360" r="10" fill="#F59E0B"/>
+
+  <text x="600" y="900" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="104" font-weight="700" fill="#F5F3FF">Oye Chakhna!</text>
+  <text x="600" y="970" text-anchor="middle" font-family="'Poppins', sans-serif" font-size="36" letter-spacing="7" fill="#DDD6FE">BOLD BITES, BIG VIBES</text>
+</svg>
